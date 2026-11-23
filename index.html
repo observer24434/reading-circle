@@ -5,29 +5,52 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>دورة القراءة</title>
 <style>
-:root{--bg:#faf7f2;--fg:#2a2622;--card:#fff;--ac:#2f7d5b;--mut:#8a8178;--bd:#e4ddd2;--bad:#c0392b}
-@media(prefers-color-scheme:dark){:root{--bg:#1c1a18;--fg:#eee8e0;--card:#262320;--ac:#4fae86;--mut:#a39a90;--bd:#38342f;--bad:#e8715f}}
+:root{--fg:#f4f1ff;--card:rgba(255,255,255,.09);--ac:#7c5cff;--ac2:#00d4b4;--mut:#bdb5e0;--bd:rgba(255,255,255,.18);--bad:#ff6b8a;--ok:#3ee6a8}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,"Segoe UI",Tahoma,Arial,sans-serif}
+body{margin:0;min-height:100vh;color:var(--fg);font-family:system-ui,"Segoe UI",Tahoma,Arial,sans-serif;background:linear-gradient(135deg,#1b1340,#0f3d5e,#3a1b5e,#0b4a4a);background-size:300% 300%;background-attachment:fixed;animation:bg 20s ease infinite}
+@keyframes bg{0%,100%{background-position:0 50%}50%{background-position:100% 50%}}
+@keyframes up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+@keyframes fl{0%,100%{transform:translateY(0) rotate(-6deg)}50%{transform:translateY(-8px) rotate(6deg)}}
+@keyframes pop{0%{transform:scale(0)}70%{transform:scale(1.4)}100%{transform:scale(1)}}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,212,180,.6)}50%{box-shadow:0 0 0 14px rgba(0,212,180,0)}}
+@keyframes grow{from{width:0}}
 #app{max-width:900px;margin:0 auto;padding:20px 16px 60px}
+#app>*{animation:up .5s both}
 h1,h2{text-align:center}
-.col{display:flex;flex-direction:column;gap:12px;max-width:420px;margin:24px auto}
-button{font:inherit;padding:14px 18px;border:0;border-radius:12px;background:var(--ac);color:#fff;cursor:pointer}
-button.ghost{background:transparent;color:var(--fg);border:1px solid var(--bd)}
-button:disabled{opacity:.5}
-input,select{font:inherit;padding:12px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--fg);width:100%}
+h1{font-size:2.2rem;background:linear-gradient(90deg,#a78bff,#00e0c0);-webkit-background-clip:text;background-clip:text;color:transparent}
+h1 .fl{display:inline-block;animation:fl 3s ease-in-out infinite;-webkit-text-fill-color:initial}
+.col{display:flex;flex-direction:column;gap:14px;max-width:420px;margin:24px auto}
+.col>*{animation:up .5s both}.col>*:nth-child(2){animation-delay:.1s}.col>*:nth-child(3){animation-delay:.2s}.col>*:nth-child(4){animation-delay:.3s}
+button{font:inherit;padding:14px 18px;border:0;border-radius:14px;background:linear-gradient(135deg,var(--ac),var(--ac2));color:#fff;cursor:pointer;transition:transform .2s,box-shadow .2s;box-shadow:0 6px 18px rgba(124,92,255,.35)}
+button:hover{transform:translateY(-3px);box-shadow:0 10px 24px rgba(0,212,180,.35)}
+button:active{transform:scale(.97)}
+button.ghost{background:rgba(255,255,255,.08);border:1px solid var(--bd);box-shadow:none}
+button.danger{background:linear-gradient(135deg,#ff4d6d,#c9184a);box-shadow:0 6px 18px rgba(255,77,109,.35)}
+button.ghost.danger{background:rgba(255,77,109,.12);border:1px solid rgba(255,77,109,.5);color:#ff9fb2;box-shadow:none}
+button:disabled{opacity:.5;transform:none}
+input,select{font:inherit;padding:12px;border-radius:12px;border:1px solid var(--bd);background:rgba(255,255,255,.1);color:var(--fg);width:100%;transition:border .2s,box-shadow .2s}
+input:focus,select:focus{outline:0;border-color:var(--ac2);box-shadow:0 0 0 3px rgba(0,212,180,.25)}
+option{color:#000}
 label{display:block;font-size:14px;color:var(--mut);margin:4px 0}
-.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;cursor:pointer}
-table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden}
-th,td{padding:10px 8px;text-align:center;border-bottom:1px solid var(--bd);font-size:15px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:16px;padding:16px;cursor:pointer;backdrop-filter:blur(8px);transition:transform .2s,border .2s}
+.card:hover{transform:translateY(-4px) scale(1.02);border-color:var(--ac2)}
+.wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:16px;overflow:hidden;backdrop-filter:blur(8px)}
+tr{animation:up .5s both}
+th,td{padding:12px 8px;text-align:center;border-bottom:1px solid var(--bd);font-size:15px}
 th{color:var(--mut);font-weight:500;font-size:13px}
+.pb{height:7px;border-radius:7px;background:rgba(255,255,255,.14);overflow:hidden;margin-top:6px}
+.pb i{display:block;height:100%;border-radius:7px;background:linear-gradient(90deg,var(--ac),var(--ac2));animation:grow 1.2s ease}
+.ok{color:var(--ok);display:inline-block;animation:pop .6s}
 .bar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:12px 0}
 .bar button{padding:10px 14px}
 .cv{text-align:center;overflow-x:auto}
-canvas{max-width:100%;border:1px solid var(--bd);background:#fff}
+canvas{max-width:100%;border-radius:10px;background:#fff;box-shadow:0 12px 40px rgba(0,0,0,.45)}
+#fin{animation:pulse 2s infinite}
 .mut{color:var(--mut);text-align:center}
 .bad{color:var(--bad)}
-.wrap{overflow-x:auto}
+.mod{position:fixed;inset:0;background:rgba(5,3,20,.75);display:flex;align-items:center;justify-content:center;padding:16px;z-index:9;animation:up .3s}
+.box{background:#251a52;border:1px solid var(--bd);border-radius:18px;padding:20px;width:100%;max-width:380px}
 </style>
 </head>
 <body>
@@ -37,7 +60,7 @@ canvas{max-width:100%;border:1px solid var(--bd);background:#fff}
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 const $=s=>document.querySelector(s),app=$('#app');
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const WORKER='https://dawra-api.observer-only.workers.dev'; // <-- paste your Cloudflare Worker URL here
+const WORKER='https://YOUR-WORKER.YOUR-NAME.workers.dev'; // <-- paste your Cloudflare Worker URL here
 const mine=()=>JSON.parse(localStorage.mine||'[]');
 const remember=(d,n)=>{const l=mine().filter(x=>x.d!==d);l.push({d,n});localStorage.mine=JSON.stringify(l)};
 const slug=s=>[...new TextEncoder().encode(s.trim().toLowerCase())].map(b=>b.toString(16).padStart(2,'0')).join('');
@@ -60,8 +83,34 @@ async function put(p,b64,msg,retry=1){
 }
 const saveMember=(d,m)=>put(d+'/members/'+slug(m.name)+'.json',enc(JSON.stringify(m)),'update '+m.name);
 
+const hash=async t=>[...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(t)))].map(b=>b.toString(16).padStart(2,'0')).join('');
+async function del(p,sh){
+  const r=await fetch(api(p),{method:'DELETE',headers:{...H(),'Content-Type':'application/json'},body:JSON.stringify({message:'delete '+p,sha:sh})});
+  if(!r.ok)throw new Error((await r.json()).message||'Server '+r.status);
+}
+async function delS(d){
+  const c=await(await getRaw(d+'/config.json')).json();
+  const mo=document.createElement('div');mo.className='mod';
+  mo.innerHTML=`<div class="box"><h2>🗑 حذف «${esc(c.name)}»</h2><p class="mut">يحذف الكتاب وكل الأعضاء وتقدّمهم نهائياً ولا يمكن الرجوع.</p>
+<label>اكتب اسم الدورة للتأكيد</label><input id="cn">${c.del?'<label>رمز الحذف</label><input id="cc" type="password">':''}
+<div class="bar"><button class="ghost" onclick="this.closest('.mod').remove()">إلغاء</button><button class="danger" id="dgo">حذف نهائي</button></div></div>`;
+  document.body.appendChild(mo);
+  $('#dgo').onclick=async()=>{
+    if($('#cn').value.trim().toLowerCase()!==c.name.trim().toLowerCase())return alert('الاسم غير مطابق');
+    if(c.del&&await hash($('#cc').value.trim())!==c.del)return alert('رمز الحذف خطأ');
+    const b=$('#dgo');b.disabled=true;b.textContent='جاري الحذف...';
+    try{
+      for(const x of await list(d+'/members'))await del(x.path,x.sha);
+      for(const x of(await list(d)).filter(x=>x.type=='file'&&x.name!='config.json'))await del(x.path,x.sha);
+      const cf=(await list(d)).find(x=>x.name=='config.json');if(cf)await del(cf.path,cf.sha);
+      localStorage.mine=JSON.stringify(mine().filter(x=>x.d!==d));
+      mo.remove();menu();
+    }catch(e){alert(e.message);b.disabled=false;b.textContent='حذف نهائي'}
+  };
+}
+
 /* ---------- screens ---------- */
-function menu(){app.innerHTML=`<h1>📖 دورة القراءة</h1><div class="col">
+function menu(){app.innerHTML=`<h1><span class="fl">📖</span> دورة القراءة</h1><div class="col">
 <button onclick="createS()">إنشاء دورة</button>
 <button onclick="joinS()">الانضمام إلى دورة</button>
 <button onclick="mineS()">دوراتك</button></div>`}
@@ -71,10 +120,11 @@ function createS(){app.innerHTML=`${back}<h2>إنشاء دورة</h2><div class=
 <div><label>عدد الصفحات في اليوم</label><input id="pp" type="number" min="1" value="20"></div>
 <div><label>اسمك في الدورة</label><input id="me"></div>
 <div><label>ملف PDF</label><input id="pdf" type="file" accept="application/pdf"></div>
+<div><label>رمز حذف الدورة (احفظه، تحتاجه لحذفها)</label><input id="dc" type="password"></div>
 <button id="go" onclick="doCreate()">إنشاء</button></div>`}
 async function doCreate(){
-  const name=$('#dn').value.trim(),n=+$('#pp').value,me=$('#me').value.trim(),f=$('#pdf').files[0];
-  if(!name||!me||!f||n<1)return alert('عبّ كل الحقول');
+  const name=$('#dn').value.trim(),n=+$('#pp').value,me=$('#me').value.trim(),f=$('#pdf').files[0],code=$('#dc').value.trim();
+  if(!name||!me||!f||n<1||!code)return alert('عبّ كل الحقول');
   
   const b=$('#go');b.disabled=true;b.textContent='جاري الرفع...';
   try{
@@ -82,7 +132,7 @@ async function doCreate(){
     if(await getRaw(d+'/config.json'))throw new Error('فيه دورة بنفس الاسم، اختر اسم ثاني');
     await put(d+'/book.pdf',await b64file(f),'add book: '+name);
     const t=ymd(new Date());
-    await put(d+'/config.json',enc(JSON.stringify({name,perDay:n,start:t})),'create dawra: '+name);
+    await put(d+'/config.json',enc(JSON.stringify({name,perDay:n,start:t,del:await hash(code)})),'create dawra: '+name);
     await saveMember(d,{name:me,joined:t,last:0,days:{}});
     remember(d,me);openD(d);
   }catch(e){alert(e.message);b.disabled=false;b.textContent='إنشاء'}
@@ -136,8 +186,8 @@ async function openD(d){
     app.innerHTML=`${back}<h2>${esc(c.name)}</h2><p class="mut">الهدف اليومي: ${c.perDay} صفحة</p>
 ${me?`<div class="col"><button onclick="read('${d}')">📖 اقرأ الآن</button></div>`:''}
 <div class="wrap"><table><tr><th>العضو</th><th>اليوم</th><th>الحالة</th><th>مجموع الصفحات</th><th>أيام فاتته</th></tr>
-${ms.map(m=>{const td=m.days[t]||0,ok=td>=c.perDay,ms_=missed(m,c);
-return `<tr><td>${esc(m.name)}</td><td>${td}/${c.perDay}</td><td>${ok?'✅ خلّص':'❌ ما خلّص'}</td><td>${m.last}</td><td class="${ms_?'bad':''}">${ms_}</td></tr>`}).join('')}</table></div>`;
+${ms.map((m,i)=>{const td=m.days[t]||0,ok=td>=c.perDay,ms_=missed(m,c);
+return `<tr style="animation-delay:${i*.08}s"><td>${esc(m.name)}</td><td>${td}/${c.perDay}<div class="pb"><i style="width:${Math.min(100,td/c.perDay*100)}%"></i></div></td><td>${ok?'<span class="ok">✅</span> خلّص':'❌ ما خلّص'}</td><td>${m.last}</td><td class="${ms_?'bad':''}">${ms_}</td></tr>`}).join('')}</table></div><div class="col"><button class="ghost danger" onclick="delS('${d}')">🗑 حذف الدورة</button></div>`;
   }catch(e){alert(e.message);menu()}
 }
 
