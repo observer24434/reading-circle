@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>دورة القراءة</title>
+<style>
+:root{--bg:#faf7f2;--fg:#2a2622;--card:#fff;--ac:#2f7d5b;--mut:#8a8178;--bd:#e4ddd2;--bad:#c0392b}
+@media(prefers-color-scheme:dark){:root{--bg:#1c1a18;--fg:#eee8e0;--card:#262320;--ac:#4fae86;--mut:#a39a90;--bd:#38342f;--bad:#e8715f}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:system-ui,"Segoe UI",Tahoma,Arial,sans-serif}
+#app{max-width:900px;margin:0 auto;padding:20px 16px 60px}
+h1,h2{text-align:center}
+.col{display:flex;flex-direction:column;gap:12px;max-width:420px;margin:24px auto}
+button{font:inherit;padding:14px 18px;border:0;border-radius:12px;background:var(--ac);color:#fff;cursor:pointer}
+button.ghost{background:transparent;color:var(--fg);border:1px solid var(--bd)}
+button:disabled{opacity:.5}
+input,select{font:inherit;padding:12px;border-radius:10px;border:1px solid var(--bd);background:var(--card);color:var(--fg);width:100%}
+label{display:block;font-size:14px;color:var(--mut);margin:4px 0}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;cursor:pointer}
+table{width:100%;border-collapse:collapse;background:var(--card);border-radius:12px;overflow:hidden}
+th,td{padding:10px 8px;text-align:center;border-bottom:1px solid var(--bd);font-size:15px}
+th{color:var(--mut);font-weight:500;font-size:13px}
+.bar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:12px 0}
+.bar button{padding:10px 14px}
+.cv{text-align:center;overflow-x:auto}
+canvas{max-width:100%;border:1px solid var(--bd);background:#fff}
+.mut{color:var(--mut);text-align:center}
+.bad{color:var(--bad)}
+.wrap{overflow-x:auto}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const $=s=>document.querySelector(s),app=$('#app');
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const WORKER='https://YOUR-WORKER.YOUR-NAME.workers.dev'; // <-- paste your Cloudflare Worker URL here
+const mine=()=>JSON.parse(localStorage.mine||'[]');
+const remember=(d,n)=>{const l=mine().filter(x=>x.d!==d);l.push({d,n});localStorage.mine=JSON.stringify(l)};
+const slug=s=>[...new TextEncoder().encode(s.trim().toLowerCase())].map(b=>b.toString(16).padStart(2,'0')).join('');
+const enc=s=>btoa(unescape(encodeURIComponent(s)));
+const b64file=f=>new Promise(r=>{const x=new FileReader();x.onload=()=>r(x.result.split(',')[1]);x.readAsDataURL(f)});
+const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const busy=t=>app.innerHTML=`<p class="mut">${t||'جاري التحميل...'}</p>`;
+const back='<button class="ghost" onclick="menu()">← القائمة</button>';
+
+/* ---------- storage (via Worker -> your GitHub repo) ---------- */
+const api=p=>`${WORKER}/${p}`;
+const H=raw=>({Accept:raw?'application/vnd.github.raw+json':'application/vnd.github+json'});
+const q=()=>`?t=${Date.now()}`;
+async function getRaw(p){const r=await fetch(api(p)+q(),{headers:H(1)});if(r.status==404)return null;if(!r.ok)throw new Error('Server '+r.status);return r}
+async function list(p){const r=await fetch(api(p)+q(),{headers:H()});if(r.status==404)return[];if(!r.ok)throw new Error('Server '+r.status);return r.json()}
+async function put(p,b64,msg,retry=1){
+  let sha;const g=await fetch(api(p)+q(),{headers:H()});if(g.ok)sha=(await g.json()).sha;
+  const w=await fetch(api(p),{method:'PUT',headers:{...H(),'Content-Type':'application/json'},body:JSON.stringify({message:msg,content:b64,sha})});
+  if(!w.ok){if(retry&&w.status==409)return put(p,b64,msg,0);throw new Error((await w.json()).message||('Server '+w.status))}
+}
+const saveMember=(d,m)=>put(d+'/members/'+slug(m.name)+'.json',enc(JSON.stringify(m)),'update '+m.name);
+
+/* ---------- screens ---------- */
+function menu(){app.innerHTML=`<h1>📖 دورة القراءة</h1><div class="col">
+<button onclick="createS()">إنشاء دورة</button>
+<button onclick="joinS()">الانضمام إلى دورة</button>
+<button onclick="mineS()">دوراتك</button></div>`}
+
+function createS(){app.innerHTML=`${back}<h2>إنشاء دورة</h2><div class="col">
+<div><label>اسم الدورة</label><input id="dn"></div>
+<div><label>عدد الصفحات في اليوم</label><input id="pp" type="number" min="1" value="20"></div>
+<div><label>اسمك في الدورة</label><input id="me"></div>
+<div><label>ملف PDF</label><input id="pdf" type="file" accept="application/pdf"></div>
+<button id="go" onclick="doCreate()">إنشاء</button></div>`}
+async function doCreate(){
+  const name=$('#dn').value.trim(),n=+$('#pp').value,me=$('#me').value.trim(),f=$('#pdf').files[0];
+  if(!name||!me||!f||n<1)return alert('عبّ كل الحقول');
+  
+  const b=$('#go');b.disabled=true;b.textContent='جاري الرفع...';
+  try{
+    const d='dawras/'+slug(name);
+    if(await getRaw(d+'/config.json'))throw new Error('فيه دورة بنفس الاسم، اختر اسم ثاني');
+    await put(d+'/book.pdf',await b64file(f),'add book: '+name);
+    const t=ymd(new Date());
+    await put(d+'/config.json',enc(JSON.stringify({name,perDay:n,start:t})),'create dawra: '+name);
+    await saveMember(d,{name:me,joined:t,last:0,days:{}});
+    remember(d,me);openD(d);
+  }catch(e){alert(e.message);b.disabled=false;b.textContent='إنشاء'}
+}
+
+async function joinS(){
+  busy();
+  try{
+    const ds=(await list('dawras')).filter(x=>x.type=='dir');
+    const cs=await Promise.all(ds.map(async x=>{const r=await getRaw(x.path+'/config.json');return r?{d:x.path,c:await r.json()}:null}));
+    const ok=cs.filter(Boolean);
+    app.innerHTML=`${back}<h2>الانضمام إلى دورة</h2>`+(ok.length?`<div class="col">
+<div><label>الدورة</label><select id="ds">${ok.map(x=>`<option value="${x.d}">${esc(x.c.name)}</option>`).join('')}</select></div>
+<div><label>اسمك في الدورة</label><input id="me"></div>
+<button onclick="doJoin()">انضمام</button></div>`:'<p class="mut">ما فيه دورات بعد</p>');
+  }catch(e){alert(e.message);menu()}
+}
+async function doJoin(){
+  const d=$('#ds').value,me=$('#me').value.trim();
+  if(!me)return alert('اكتب اسمك');
+  busy('جاري الانضمام...');
+  try{
+    const exists=await getRaw(d+'/members/'+slug(me)+'.json');
+    const mineHere=mine().some(x=>x.d==d&&x.n.toLowerCase()==me.toLowerCase());
+    if(exists&&!mineHere)throw new Error('الاسم مستخدم في هذي الدورة');
+    if(!exists)await saveMember(d,{name:me,joined:ymd(new Date()),last:0,days:{}});
+    remember(d,me);openD(d);
+  }catch(e){alert(e.message);joinS()}
+}
+
+async function mineS(){
+  const l=mine();
+  if(!l.length){app.innerHTML=`${back}<h2>دوراتك</h2><p class="mut">ما انضميت لأي دورة بعد</p>`;return}
+  busy();
+  const cs=await Promise.all(l.map(async x=>{try{const r=await getRaw(x.d+'/config.json');return r?{...x,c:await r.json()}:null}catch(e){return null}}));
+  app.innerHTML=`${back}<h2>دوراتك</h2><div class="col">${cs.filter(Boolean).map(x=>`<div class="card" onclick="openD('${x.d}')"><b>${esc(x.c.name)}</b><div class="mut">${x.c.perDay} صفحة يومياً · أنت: ${esc(x.n)}</div></div>`).join('')}</div>`;
+}
+
+function missed(m,c){
+  const s=(m.joined>c.start?m.joined:c.start).split('-'),today=new Date();today.setHours(0,0,0,0);
+  let n=0;for(const x=new Date(+s[0],s[1]-1,+s[2]);x<today;x.setDate(x.getDate()+1))if((m.days[ymd(x)]||0)<c.perDay)n++;
+  return n;
+}
+async function openD(d){
+  busy();
+  try{
+    const c=await(await getRaw(d+'/config.json')).json();
+    const ms=await Promise.all((await list(d+'/members')).filter(x=>x.name.endsWith('.json')).map(async x=>(await getRaw(x.path)).json()));
+    const t=ymd(new Date()),me=mine().find(x=>x.d==d);
+    ms.sort((a,b)=>b.last-a.last);
+    app.innerHTML=`${back}<h2>${esc(c.name)}</h2><p class="mut">الهدف اليومي: ${c.perDay} صفحة</p>
+${me?`<div class="col"><button onclick="read('${d}')">📖 اقرأ الآن</button></div>`:''}
+<div class="wrap"><table><tr><th>العضو</th><th>اليوم</th><th>الحالة</th><th>مجموع الصفحات</th><th>أيام فاتته</th></tr>
+${ms.map(m=>{const td=m.days[t]||0,ok=td>=c.perDay,ms_=missed(m,c);
+return `<tr><td>${esc(m.name)}</td><td>${td}/${c.perDay}</td><td>${ok?'✅ خلّص':'❌ ما خلّص'}</td><td>${m.last}</td><td class="${ms_?'bad':''}">${ms_}</td></tr>`}).join('')}</table></div>`;
+  }catch(e){alert(e.message);menu()}
+}
+
+/* ---------- reader ---------- */
+let pdf,m,c,d,view;
+async function read(dd){
+  d=dd;busy('جاري تحميل الكتاب...');
+  try{
+    const me=mine().find(x=>x.d==d);
+    c=await(await getRaw(d+'/config.json')).json();
+    m=await(await getRaw(d+'/members/'+slug(me.n)+'.json')).json();
+    pdf=await pdfjsLib.getDocument({data:await(await getRaw(d+'/book.pdf')).arrayBuffer()}).promise;
+    view=Math.min(m.last+1,pdf.numPages);ui();
+  }catch(e){alert(e.message);openD(d)}
+}
+function ui(){
+  const t=ymd(new Date()),td=m.days[t]||0,done=m.last>=pdf.numPages;
+  app.innerHTML=`<div class="bar"><button class="ghost" onclick="openD(d)">← الدورة</button><b>اليوم ${td}/${c.perDay} ${td>=c.perDay?'✅':''}</b></div>
+<div class="cv"><canvas id="cv"></canvas></div>
+<div class="bar"><button class="ghost" onclick="nav(-1)" ${view<=1?'disabled':''}>السابقة →</button><span>${view} / ${pdf.numPages}</span><button class="ghost" onclick="nav(1)" ${view>m.last||view>=pdf.numPages?'disabled':''}>← التالية</button></div>
+<div class="col">${view>m.last?'<button id="fin" onclick="fin()">✔ خلّصت الصفحة</button>':done&&view==pdf.numPages?'<p class="mut">🎉 خلّصت الكتاب كله</p>':''}</div>`;
+  show();
+}
+async function show(){
+  const p=await pdf.getPage(view),w=Math.min(app.clientWidth-8,900),s=w/p.getViewport({scale:1}).width,dpr=window.devicePixelRatio||1;
+  const vp=p.getViewport({scale:s*dpr}),cv=$('#cv');
+  cv.width=vp.width;cv.height=vp.height;cv.style.width=w+'px';
+  await p.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;
+}
+function nav(x){view+=x;ui();scrollTo(0,0)}
+async function fin(){
+  const b=$('#fin');b.disabled=true;b.textContent='جاري الحفظ...';
+  const t=ymd(new Date());
+  m.days[t]=(m.days[t]||0)+1;m.last=view;
+  try{await saveMember(d,m)}catch(e){alert(e.message);m.days[t]--;m.last=view-1;return ui()}
+  if(view<pdf.numPages)view++;ui();scrollTo(0,0);
+}
+menu();
+</script>
+</body>
+</html>
