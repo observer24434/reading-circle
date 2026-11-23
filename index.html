@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>دورة القراءة</title>
-  <meta property="og:type" content="website">
+<meta property="og:type" content="website">
 <meta property="og:title" content="دورة القراءة">
 <meta property="og:description" content="اقرأ مع أصدقائك وتابع تقدّم الجميع يومياً">
 <meta property="og:url" content="https://observer24434.github.io/reading-circle/">
@@ -71,15 +71,39 @@ canvas{max-width:100%;border-radius:10px;background:#fff;box-shadow:0 12px 40px 
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 const $=s=>document.querySelector(s),app=$('#app');
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const WORKER='https://dawra-api2.observer-only.workers.dev'; // <-- paste your Cloudflare Worker URL here
+const WORKER='https://dawra-api.observer-only.workers.dev';
 const mine=()=>JSON.parse(localStorage.mine||'[]');
 const remember=(d,n)=>{const l=mine().filter(x=>x.d!==d);l.push({d,n});localStorage.mine=JSON.stringify(l)};
 const slug=s=>[...new TextEncoder().encode(s.trim().toLowerCase())].map(b=>b.toString(16).padStart(2,'0')).join('');
 const enc=s=>btoa(unescape(encodeURIComponent(s)));
 const b64file=f=>new Promise(r=>{const x=new FileReader();x.onload=()=>r(x.result.split(',')[1]);x.readAsDataURL(f)});
 const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-const busy=t=>app.innerHTML=`<p class="mut">${t||'جاري التحميل...'}</p>`;
-const back='<button class="ghost" onclick="menu()">← القائمة</button>';
+const busy=x=>app.innerHTML=`<p class="mut">${x||tr('loading')}</p>`;
+const T={
+ar:{title:'دورة القراءة',loading:'جاري التحميل...',menu_back:'← القائمة',create:'إنشاء دورة',join:'الانضمام إلى دورة',mine:'دوراتك',lang_btn:'🌐 اللغة · Language',
+name_lbl:'اسم الدورة',pages_lbl:'عدد الصفحات في اليوم',me_lbl:'اسمك في الدورة',pdf_lbl:'ملف PDF',code_lbl:'رمز حذف الدورة (احفظه، تحتاجه لحذفها)',create_btn:'إنشاء',
+fill_all:'عبّ كل الحقول',uploading:'جاري الرفع...',dup:'فيه دورة بنفس الاسم، اختر اسم ثاني',circle_lbl:'الدورة',join_btn:'انضمام',none_yet:'ما فيه دورات بعد',
+enter_name:'اكتب اسمك',joining:'جاري الانضمام...',name_taken:'الاسم مستخدم في هذي الدورة',not_joined:'ما انضميت لأي دورة بعد',
+card:(n,m)=>`${n} صفحة يومياً · أنت: ${m}`,goal:n=>`الهدف اليومي: ${n} صفحة`,read_now:'📖 اقرأ الآن',
+th_member:'العضو',th_today:'اليوم',th_status:'الحالة',th_total:'مجموع الصفحات',th_missed:'أيام فاتته',done:'خلّص',notdone:'ما خلّص',del_btn:'🗑 حذف الدورة',
+del_title:n=>`🗑 حذف «${n}»`,del_warn:'يحذف الكتاب وكل الأعضاء وتقدّمهم نهائياً ولا يمكن الرجوع.',del_confirm:'اكتب اسم الدورة للتأكيد',del_code:'رمز الحذف',cancel:'إلغاء',del_final:'حذف نهائي',
+name_mismatch:'الاسم غير مطابق',bad_code:'رمز الحذف خطأ',deleting:'جاري الحذف...',loading_book:'جاري تحميل الكتاب...',back_circle:'← الدورة',today:(a,g)=>`اليوم ${a}/${g}`,
+prev:'السابقة →',next:'← التالية',finish:'✔ خلّصت الصفحة',book_done:'🎉 خلّصت الكتاب كله',saving:'جاري الحفظ...'},
+en:{title:'Reading Circle',loading:'Loading...',menu_back:'← Menu',create:'Create a circle',join:'Join a circle',mine:'Your circles',lang_btn:'🌐 Language · اللغة',
+name_lbl:'Circle name',pages_lbl:'Pages per day',me_lbl:'Your name in the circle',pdf_lbl:'PDF file',code_lbl:"Deletion code (save it, you'll need it to delete the circle)",create_btn:'Create',
+fill_all:'Fill in all fields',uploading:'Uploading...',dup:'A circle with this name already exists. Pick another name.',circle_lbl:'Circle',join_btn:'Join',none_yet:'No circles yet',
+enter_name:'Enter your name',joining:'Joining...',name_taken:'That name is already taken in this circle',not_joined:"You haven't joined any circle yet",
+card:(n,m)=>`${n} pages a day · You: ${m}`,goal:n=>`Daily goal: ${n} pages`,read_now:'📖 Read now',
+th_member:'Member',th_today:'Today',th_status:'Status',th_total:'Total pages',th_missed:'Missed days',done:'Done',notdone:'Not yet',del_btn:'🗑 Delete circle',
+del_title:n=>`🗑 Delete “${n}”`,del_warn:"This permanently deletes the book, all members and their progress. It can't be undone.",del_confirm:"Type the circle's name to confirm",del_code:'Deletion code',cancel:'Cancel',del_final:'Delete permanently',
+name_mismatch:"The name doesn't match",bad_code:'Wrong deletion code',deleting:'Deleting...',loading_book:'Loading the book...',back_circle:'← Circle',today:(a,g)=>`Today ${a}/${g}`,
+prev:'← Previous',next:'Next →',finish:'✔ I finished this page',book_done:'🎉 You finished the whole book',saving:'Saving...'}};
+let L=localStorage.lang||'';
+const tr=k=>(T[L]||T.ar)[k];
+const applyLang=()=>{document.documentElement.lang=L;document.documentElement.dir=L=='en'?'ltr':'rtl';document.title=tr('title')};
+function langS(){document.documentElement.dir='rtl';app.innerHTML=`<h1><span class="fl">📖</span> دورة القراءة</h1><p class="mut">اختر اللغة · Choose your language</p><div class="col"><button onclick="setLang('ar')">العربية</button><button onclick="setLang('en')">English</button></div>`}
+function setLang(l){L=l;localStorage.lang=l;applyLang();menu()}
+const back=()=>`<button class="ghost" onclick="menu()">${tr('menu_back')}</button>`;
 
 /* ---------- storage (via Worker -> your GitHub repo) ---------- */
 const api=p=>`${WORKER}/${p}`;
@@ -102,51 +126,52 @@ async function del(p,sh){
 async function delS(d){
   const c=await(await getRaw(d+'/config.json')).json();
   const mo=document.createElement('div');mo.className='mod';
-  mo.innerHTML=`<div class="box"><h2>🗑 حذف «${esc(c.name)}»</h2><p class="mut">يحذف الكتاب وكل الأعضاء وتقدّمهم نهائياً ولا يمكن الرجوع.</p>
-<label>اكتب اسم الدورة للتأكيد</label><input id="cn">${c.del?'<label>رمز الحذف</label><input id="cc" type="password">':''}
-<div class="bar"><button class="ghost" onclick="this.closest('.mod').remove()">إلغاء</button><button class="danger" id="dgo">حذف نهائي</button></div></div>`;
+  mo.innerHTML=`<div class="box"><h2>${tr('del_title')(esc(c.name))}</h2><p class="mut">${tr('del_warn')}</p>
+<label>${tr('del_confirm')}</label><input id="cn">${c.del?`<label>${tr('del_code')}</label><input id="cc" type="password">`:''}
+<div class="bar"><button class="ghost" onclick="this.closest('.mod').remove()">${tr('cancel')}</button><button class="danger" id="dgo">${tr('del_final')}</button></div></div>`;
   document.body.appendChild(mo);
   $('#dgo').onclick=async()=>{
-    if($('#cn').value.trim().toLowerCase()!==c.name.trim().toLowerCase())return alert('الاسم غير مطابق');
-    if(c.del&&await hash($('#cc').value.trim())!==c.del)return alert('رمز الحذف خطأ');
-    const b=$('#dgo');b.disabled=true;b.textContent='جاري الحذف...';
+    if($('#cn').value.trim().toLowerCase()!==c.name.trim().toLowerCase())return alert(tr('name_mismatch'));
+    if(c.del&&await hash($('#cc').value.trim())!==c.del)return alert(tr('bad_code'));
+    const b=$('#dgo');b.disabled=true;b.textContent=tr('deleting');
     try{
       for(const x of await list(d+'/members'))await del(x.path,x.sha);
       for(const x of(await list(d)).filter(x=>x.type=='file'&&x.name!='config.json'))await del(x.path,x.sha);
       const cf=(await list(d)).find(x=>x.name=='config.json');if(cf)await del(cf.path,cf.sha);
       localStorage.mine=JSON.stringify(mine().filter(x=>x.d!==d));
       mo.remove();menu();
-    }catch(e){alert(e.message);b.disabled=false;b.textContent='حذف نهائي'}
+    }catch(e){alert(e.message);b.disabled=false;b.textContent=tr('del_final')}
   };
 }
 
 /* ---------- screens ---------- */
-function menu(){app.innerHTML=`<h1><span class="fl">📖</span> دورة القراءة</h1><div class="col">
-<button onclick="createS()">إنشاء دورة</button>
-<button onclick="joinS()">الانضمام إلى دورة</button>
-<button onclick="mineS()">دوراتك</button></div>`}
+function menu(){app.innerHTML=`<h1><span class="fl">📖</span> ${tr('title')}</h1><div class="col">
+<button onclick="createS()">${tr('create')}</button>
+<button onclick="joinS()">${tr('join')}</button>
+<button onclick="mineS()">${tr('mine')}</button>
+<button class="ghost" onclick="langS()">${tr('lang_btn')}</button></div>`}
 
-function createS(){app.innerHTML=`${back}<h2>إنشاء دورة</h2><div class="col">
-<div><label>اسم الدورة</label><input id="dn"></div>
-<div><label>عدد الصفحات في اليوم</label><input id="pp" type="number" min="1" value="20"></div>
-<div><label>اسمك في الدورة</label><input id="me"></div>
-<div><label>ملف PDF</label><input id="pdf" type="file" accept="application/pdf"></div>
-<div><label>رمز حذف الدورة (احفظه، تحتاجه لحذفها)</label><input id="dc" type="password"></div>
-<button id="go" onclick="doCreate()">إنشاء</button></div>`}
+function createS(){app.innerHTML=`${back()}<h2>${tr('create')}</h2><div class="col">
+<div><label>${tr('name_lbl')}</label><input id="dn"></div>
+<div><label>${tr('pages_lbl')}</label><input id="pp" type="number" min="1" value="20"></div>
+<div><label>${tr('me_lbl')}</label><input id="me"></div>
+<div><label>${tr('pdf_lbl')}</label><input id="pdf" type="file" accept="application/pdf"></div>
+<div><label>${tr('code_lbl')}</label><input id="dc" type="password"></div>
+<button id="go" onclick="doCreate()">${tr('create_btn')}</button></div>`}
 async function doCreate(){
   const name=$('#dn').value.trim(),n=+$('#pp').value,me=$('#me').value.trim(),f=$('#pdf').files[0],code=$('#dc').value.trim();
-  if(!name||!me||!f||n<1||!code)return alert('عبّ كل الحقول');
+  if(!name||!me||!f||n<1||!code)return alert(tr('fill_all'));
   
-  const b=$('#go');b.disabled=true;b.textContent='جاري الرفع...';
+  const b=$('#go');b.disabled=true;b.textContent=tr('uploading');
   try{
     const d='dawras/'+slug(name);
-    if(await getRaw(d+'/config.json'))throw new Error('فيه دورة بنفس الاسم، اختر اسم ثاني');
+    if(await getRaw(d+'/config.json'))throw new Error(tr('dup'));
     await put(d+'/book.pdf',await b64file(f),'add book: '+name);
     const t=ymd(new Date());
     await put(d+'/config.json',enc(JSON.stringify({name,perDay:n,start:t,del:await hash(code)})),'create dawra: '+name);
     await saveMember(d,{name:me,joined:t,last:0,days:{}});
     remember(d,me);openD(d);
-  }catch(e){alert(e.message);b.disabled=false;b.textContent='إنشاء'}
+  }catch(e){alert(e.message);b.disabled=false;b.textContent=tr('create_btn')}
 }
 
 async function joinS(){
@@ -155,20 +180,20 @@ async function joinS(){
     const ds=(await list('dawras')).filter(x=>x.type=='dir');
     const cs=await Promise.all(ds.map(async x=>{const r=await getRaw(x.path+'/config.json');return r?{d:x.path,c:await r.json()}:null}));
     const ok=cs.filter(Boolean);
-    app.innerHTML=`${back}<h2>الانضمام إلى دورة</h2>`+(ok.length?`<div class="col">
-<div><label>الدورة</label><select id="ds">${ok.map(x=>`<option value="${x.d}">${esc(x.c.name)}</option>`).join('')}</select></div>
-<div><label>اسمك في الدورة</label><input id="me"></div>
-<button onclick="doJoin()">انضمام</button></div>`:'<p class="mut">ما فيه دورات بعد</p>');
+    app.innerHTML=`${back()}<h2>${tr('join')}</h2>`+(ok.length?`<div class="col">
+<div><label>${tr('circle_lbl')}</label><select id="ds">${ok.map(x=>`<option value="${x.d}">${esc(x.c.name)}</option>`).join('')}</select></div>
+<div><label>${tr('me_lbl')}</label><input id="me"></div>
+<button onclick="doJoin()">${tr('join_btn')}</button></div>`:`<p class="mut">${tr('none_yet')}</p>`);
   }catch(e){alert(e.message);menu()}
 }
 async function doJoin(){
   const d=$('#ds').value,me=$('#me').value.trim();
-  if(!me)return alert('اكتب اسمك');
-  busy('جاري الانضمام...');
+  if(!me)return alert(tr('enter_name'));
+  busy(tr('joining'));
   try{
     const exists=await getRaw(d+'/members/'+slug(me)+'.json');
     const mineHere=mine().some(x=>x.d==d&&x.n.toLowerCase()==me.toLowerCase());
-    if(exists&&!mineHere)throw new Error('الاسم مستخدم في هذي الدورة');
+    if(exists&&!mineHere)throw new Error(tr('name_taken'));
     if(!exists)await saveMember(d,{name:me,joined:ymd(new Date()),last:0,days:{}});
     remember(d,me);openD(d);
   }catch(e){alert(e.message);joinS()}
@@ -176,10 +201,10 @@ async function doJoin(){
 
 async function mineS(){
   const l=mine();
-  if(!l.length){app.innerHTML=`${back}<h2>دوراتك</h2><p class="mut">ما انضميت لأي دورة بعد</p>`;return}
+  if(!l.length){app.innerHTML=`${back()}<h2>${tr('mine')}</h2><p class="mut">${tr('not_joined')}</p>`;return}
   busy();
   const cs=await Promise.all(l.map(async x=>{try{const r=await getRaw(x.d+'/config.json');return r?{...x,c:await r.json()}:null}catch(e){return null}}));
-  app.innerHTML=`${back}<h2>دوراتك</h2><div class="col">${cs.filter(Boolean).map(x=>`<div class="card" onclick="openD('${x.d}')"><b>${esc(x.c.name)}</b><div class="mut">${x.c.perDay} صفحة يومياً · أنت: ${esc(x.n)}</div></div>`).join('')}</div>`;
+  app.innerHTML=`${back()}<h2>${tr('mine')}</h2><div class="col">${cs.filter(Boolean).map(x=>`<div class="card" onclick="openD('${x.d}')"><b>${esc(x.c.name)}</b><div class="mut">${tr('card')(x.c.perDay,esc(x.n))}</div></div>`).join('')}</div>`;
 }
 
 function missed(m,c){
@@ -194,18 +219,18 @@ async function openD(d){
     const ms=await Promise.all((await list(d+'/members')).filter(x=>x.name.endsWith('.json')).map(async x=>(await getRaw(x.path)).json()));
     const t=ymd(new Date()),me=mine().find(x=>x.d==d);
     ms.sort((a,b)=>b.last-a.last);
-    app.innerHTML=`${back}<h2>${esc(c.name)}</h2><p class="mut">الهدف اليومي: ${c.perDay} صفحة</p>
-${me?`<div class="col"><button onclick="read('${d}')">📖 اقرأ الآن</button></div>`:''}
-<div class="wrap"><table><tr><th>العضو</th><th>اليوم</th><th>الحالة</th><th>مجموع الصفحات</th><th>أيام فاتته</th></tr>
+    app.innerHTML=`${back()}<h2>${esc(c.name)}</h2><p class="mut">${tr('goal')(c.perDay)}</p>
+${me?`<div class="col"><button onclick="read('${d}')">${tr('read_now')}</button></div>`:''}
+<div class="wrap"><table><tr><th>${tr('th_member')}</th><th>${tr('th_today')}</th><th>${tr('th_status')}</th><th>${tr('th_total')}</th><th>${tr('th_missed')}</th></tr>
 ${ms.map((m,i)=>{const td=m.days[t]||0,ok=td>=c.perDay,ms_=missed(m,c);
-return `<tr style="animation-delay:${i*.08}s"><td>${esc(m.name)}</td><td>${td}/${c.perDay}<div class="pb"><i style="width:${Math.min(100,td/c.perDay*100)}%"></i></div></td><td>${ok?'<span class="ok">✅</span> خلّص':'❌ ما خلّص'}</td><td>${m.last}</td><td class="${ms_?'bad':''}">${ms_}</td></tr>`}).join('')}</table></div><div class="col"><button class="ghost danger" onclick="delS('${d}')">🗑 حذف الدورة</button></div>`;
+return `<tr style="animation-delay:${i*.08}s"><td>${esc(m.name)}</td><td>${td}/${c.perDay}<div class="pb"><i style="width:${Math.min(100,td/c.perDay*100)}%"></i></div></td><td>${ok?`<span class="ok">✅</span> ${tr('done')}`:`❌ ${tr('notdone')}`}</td><td>${m.last}</td><td class="${ms_?'bad':''}">${ms_}</td></tr>`}).join('')}</table></div><div class="col"><button class="ghost danger" onclick="delS('${d}')">${tr('del_btn')}</button></div>`;
   }catch(e){alert(e.message);menu()}
 }
 
 /* ---------- reader ---------- */
 let pdf,m,c,d,view;
 async function read(dd){
-  d=dd;busy('جاري تحميل الكتاب...');
+  d=dd;busy(tr('loading_book'));
   try{
     const me=mine().find(x=>x.d==d);
     c=await(await getRaw(d+'/config.json')).json();
@@ -216,10 +241,10 @@ async function read(dd){
 }
 function ui(){
   const t=ymd(new Date()),td=m.days[t]||0,done=m.last>=pdf.numPages;
-  app.innerHTML=`<div class="bar"><button class="ghost" onclick="openD(d)">← الدورة</button><b>اليوم ${td}/${c.perDay} ${td>=c.perDay?'✅':''}</b></div>
+  app.innerHTML=`<div class="bar"><button class="ghost" onclick="openD(d)">${tr('back_circle')}</button><b>${tr('today')(td,c.perDay)} ${td>=c.perDay?'✅':''}</b></div>
 <div class="cv"><canvas id="cv"></canvas></div>
-<div class="bar"><button class="ghost" onclick="nav(-1)" ${view<=1?'disabled':''}>السابقة →</button><span>${view} / ${pdf.numPages}</span><button class="ghost" onclick="nav(1)" ${view>m.last||view>=pdf.numPages?'disabled':''}>← التالية</button></div>
-<div class="col">${view>m.last?'<button id="fin" onclick="fin()">✔ خلّصت الصفحة</button>':done&&view==pdf.numPages?'<p class="mut">🎉 خلّصت الكتاب كله</p>':''}</div>`;
+<div class="bar"><button class="ghost" onclick="nav(-1)" ${view<=1?'disabled':''}>${tr('prev')}</button><span>${view} / ${pdf.numPages}</span><button class="ghost" onclick="nav(1)" ${view>m.last||view>=pdf.numPages?'disabled':''}>${tr('next')}</button></div>
+<div class="col">${view>m.last?`<button id="fin" onclick="fin()">${tr('finish')}</button>`:done&&view==pdf.numPages?`<p class="mut">${tr('book_done')}</p>`:''}</div>`;
   show();
 }
 async function show(){
@@ -230,13 +255,13 @@ async function show(){
 }
 function nav(x){view+=x;ui();scrollTo(0,0)}
 async function fin(){
-  const b=$('#fin');b.disabled=true;b.textContent='جاري الحفظ...';
+  const b=$('#fin');b.disabled=true;b.textContent=tr('saving');
   const t=ymd(new Date());
   m.days[t]=(m.days[t]||0)+1;m.last=view;
   try{await saveMember(d,m)}catch(e){alert(e.message);m.days[t]--;m.last=view-1;return ui()}
   if(view<pdf.numPages)view++;ui();scrollTo(0,0);
 }
-menu();
+if(L){applyLang();menu()}else langS();
 </script>
   <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "625a605e35d4490aa269355fba10781f"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
