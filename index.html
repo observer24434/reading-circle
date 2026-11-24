@@ -91,7 +91,7 @@ th_member:'العضو',th_today:'اليوم',th_status:'الحالة',th_total:'
 del_title:n=>`🗑 حذف «${n}»`,del_warn:'يحذف الكتاب وكل الأعضاء وتقدّمهم نهائياً ولا يمكن الرجوع.',del_confirm:'اكتب اسم الدورة للتأكيد',del_code:'رمز الحذف',cancel:'إلغاء',del_final:'حذف نهائي',
 name_mismatch:'الاسم غير مطابق',bad_code:'رمز الحذف خطأ',deleting:'جاري الحذف...',loading_book:'جاري تحميل الكتاب...',back_circle:'← الدورة',today:(a,g)=>`اليوم ${a}/${g}`,
 prev:'السابقة →',next:'← التالية',finish:'✔ خلّصت الصفحة',book_done:'🎉 خلّصت الكتاب كله',saving:'جاري الحفظ...',leave_btn:'🚪 مغادرة الدورة',leave_ask:'تبي تغادر هذي الدورة؟ راح يُحذف تقدّمك فيها.',leaving:'جاري المغادرة...',type_word:'اكتب هذي الكلمة للتأكيد',wrong_word:'الكلمة غير مطابقة',only_creator:'فقط منشئ الدورة يقدر يحذفها',sync_btn:'🔗 مزامنة الأجهزة',sync_title:'مزامنة الأجهزة',sync_show_btn:'📲 اعرض كود ورمز QR',sync_have_btn:'⌨️ عندي كود',
-sync_info:'على جهازك الثاني اكتب الكلمات الست أو امسح رمز QR.',sync_note:'الكود يعمل مرة واحدة فقط وصالح 10 دقائق. لا تشاركه مع أحد.',link_btn:'ربط',bad_code2:'الكود غير صحيح',code_expired:'انتهت صلاحية الكود',syncing:'جاري الربط...',linked_ok:'تم ربط الجهاز ✅',qr_fallback:'رابط الربط:',
+sync_info:'على جهازك الثاني اكتب الكلمات الست أو امسح رمز QR.',sync_note:'الكود يعمل مرة واحدة فقط وصالح 10 دقائق. لا تشاركه مع أحد.',link_btn:'ربط',bad_code2:'الكود غير صحيح',code_expired:'انتهت صلاحية الكود',syncing:'جاري الربط...',linked_ok:'تم ربط الجهاز ✅',qr_fallback:'رابط الربط:',already_joined:'أنت منضم لهذي الدورة من قبل ✅',
 words:['قمر','نخلة','سحابة','وردة','بحر','جبل','نجمة','قلم','كتاب','شمس','ورقة','نهر','صقر','زيتون','ريح','سفينة','قهوة','تمر','ليمون','حديقة']},
 en:{title:'Reading Circle',loading:'Loading...',menu_back:'← Menu',create:'Create a circle',join:'Join a circle',mine:'Your circles',lang_btn:'🌐 Language · اللغة',
 name_lbl:'Circle name',pages_lbl:'Pages per day',me_lbl:'Your name in the circle',pdf_lbl:'PDF file',code_lbl:"Deletion code (save it, you'll need it to delete the circle)",create_btn:'Create',
@@ -102,7 +102,7 @@ th_member:'Member',th_today:'Today',th_status:'Status',th_total:'Total pages',th
 del_title:n=>`🗑 Delete “${n}”`,del_warn:"This permanently deletes the book, all members and their progress. It can't be undone.",del_confirm:"Type the circle's name to confirm",del_code:'Deletion code',cancel:'Cancel',del_final:'Delete permanently',
 name_mismatch:"The name doesn't match",bad_code:'Wrong deletion code',deleting:'Deleting...',loading_book:'Loading the book...',back_circle:'← Circle',today:(a,g)=>`Today ${a}/${g}`,
 prev:'← Previous',next:'Next →',finish:'✔ I finished this page',book_done:'🎉 You finished the whole book',saving:'Saving...',leave_btn:'🚪 Leave circle',leave_ask:'Leave this circle? Your progress in it will be deleted.',leaving:'Leaving...',type_word:'Type this word to confirm',wrong_word:"The word doesn't match",only_creator:'Only the creator can delete this circle',sync_btn:'🔗 Sync devices',sync_title:'Sync devices',sync_show_btn:'📲 Show a code and QR',sync_have_btn:'⌨️ I have a code',
-sync_info:'On your other device, type the 6 words or scan the QR code.',sync_note:"The code works once and expires in 10 minutes. Don't share it with anyone.",link_btn:'Link',bad_code2:'Invalid code',code_expired:'This code has expired',syncing:'Linking...',linked_ok:'Device linked ✅',qr_fallback:'Link:',
+sync_info:'On your other device, type the 6 words or scan the QR code.',sync_note:"The code works once and expires in 10 minutes. Don't share it with anyone.",link_btn:'Link',bad_code2:'Invalid code',code_expired:'This code has expired',syncing:'Linking...',linked_ok:'Device linked ✅',qr_fallback:'Link:',already_joined:'You have already joined this circle ✅',
 words:['moon','palm','cloud','rose','sea','mountain','star','pen','book','sun','paper','river','falcon','olive','wind','ship','coffee','lemon','tiger','garden']}};
 let L=localStorage.lang||'';
 const tr=k=>(T[L]||T.ar)[k];
@@ -195,7 +195,7 @@ async function linkWith(w){
 let curCode='';
 function leaveSync(){if(curCode){rmFile(curCode).catch(()=>{});curCode=''}menu()}
 function syncS(){app.innerHTML=`${back()}<h2>${tr('sync_title')}</h2><div class="col"><button onclick="syncShow()">${tr('sync_show_btn')}</button><button onclick="syncHave()">${tr('sync_have_btn')}</button></div>`}
-function syncHave(){app.innerHTML=`<button class="ghost" onclick="syncS()">${tr('menu_back')}</button><h2>${tr('sync_title')}</h2><div class="col"><input id="wc" dir="ltr" autocomplete="off" autocapitalize="off" placeholder="word-word-word-word-word-word"><button id="lb" onclick="doLink()">${tr('link_btn')}</button></div>`}
+function syncHave(){app.innerHTML=`<button class="ghost" onclick="syncS()">${tr('menu_back')}</button><h2>${tr('sync_title')}</h2><div class="col"><input id="wc" dir="ltr" autocomplete="off" autocapitalize="off" oninput="this.value=this.value.toLowerCase().replace(/[^a-z]+/g,'-')" placeholder="word-word-word-word-word-word"><button id="lb" onclick="doLink()">${tr('link_btn')}</button></div>`}
 async function doLink(){
   const w=normW($('#wc').value);if(!w)return alert(tr('bad_code2'));
   const b=$('#lb');b.disabled=true;b.textContent=tr('syncing');
@@ -213,7 +213,7 @@ async function syncShow(){
     curCode=p;
     const link=location.origin+location.pathname+'#sync='+w;
     app.innerHTML=`<button class="ghost" onclick="leaveSync()">${tr('menu_back')}</button><h2>${tr('sync_title')}</h2><p class="mut">${tr('sync_info')}</p>
-<div id="synccode" dir="ltr" style="text-align:center;font-size:22px;font-weight:700;color:#00e0c0;margin:12px 0;line-height:1.6">${w.split('-').join(' · ')}</div>
+<div id="synccode" dir="ltr" style="text-align:center;font-size:22px;font-weight:700;color:#00e0c0;margin:12px 0;line-height:1.6;overflow-wrap:anywhere">${w}</div>
 <div style="text-align:center"><div id="qr" style="background:#fff;padding:12px;border-radius:12px;display:inline-block"></div></div>
 <p class="mut">${tr('sync_note')}</p>`;
     if(window.QRCode)new QRCode($('#qr'),{text:link,width:200,height:200,correctLevel:QRCode.CorrectLevel.M});
@@ -272,6 +272,8 @@ async function joinS(){
 async function doJoin(){
   const d=$('#ds').value,me=$('#me').value.trim();
   if(!me)return alert(tr('enter_name'));
+  if(localStorage.acct){try{await pullMine(false)}catch(e){}}
+  if(mine().some(x=>x.d==d)){alert(tr('already_joined'));return openD(d)}
   busy(tr('joining'));
   try{
     const exists=await getRaw(d+'/members/'+slug(me)+'.json');
