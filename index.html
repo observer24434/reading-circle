@@ -67,13 +67,15 @@ canvas{max-width:100%;border-radius:10px;background:#fff;box-shadow:0 12px 40px 
 <body>
 <div id="app"></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script>
 pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 const $=s=>document.querySelector(s),app=$('#app');
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const WORKER='https://dawra-api2.observer-only.workers.dev';
 const mine=()=>JSON.parse(localStorage.mine||'[]');
-const remember=(d,n)=>{const l=mine().filter(x=>x.d!==d);l.push({d,n});localStorage.mine=JSON.stringify(l)};
+const setMine=a=>{localStorage.mine=JSON.stringify(a);pushMine().catch(()=>{})};
+const remember=(d,n)=>{const l=mine().filter(x=>x.d!==d);l.push({d,n});setMine(l)};
 const slug=s=>[...new TextEncoder().encode(s.trim().toLowerCase())].map(b=>b.toString(16).padStart(2,'0')).join('');
 const enc=s=>btoa(unescape(encodeURIComponent(s)));
 const b64file=f=>new Promise(r=>{const x=new FileReader();x.onload=()=>r(x.result.split(',')[1]);x.readAsDataURL(f)});
@@ -88,7 +90,8 @@ card:(n,m)=>`${n} صفحة يومياً · أنت: ${m}`,goal:n=>`الهدف ا�
 th_member:'العضو',th_today:'اليوم',th_status:'الحالة',th_total:'مجموع الصفحات',th_missed:'أيام فاتته',done:'خلّص',notdone:'ما خلّص',del_btn:'🗑 حذف الدورة',
 del_title:n=>`🗑 حذف «${n}»`,del_warn:'يحذف الكتاب وكل الأعضاء وتقدّمهم نهائياً ولا يمكن الرجوع.',del_confirm:'اكتب اسم الدورة للتأكيد',del_code:'رمز الحذف',cancel:'إلغاء',del_final:'حذف نهائي',
 name_mismatch:'الاسم غير مطابق',bad_code:'رمز الحذف خطأ',deleting:'جاري الحذف...',loading_book:'جاري تحميل الكتاب...',back_circle:'← الدورة',today:(a,g)=>`اليوم ${a}/${g}`,
-prev:'السابقة →',next:'← التالية',finish:'✔ خلّصت الصفحة',book_done:'🎉 خلّصت الكتاب كله',saving:'جاري الحفظ...',leave_btn:'🚪 مغادرة الدورة',leave_ask:'تبي تغادر هذي الدورة؟ راح يُحذف تقدّمك فيها.',leaving:'جاري المغادرة...',type_word:'اكتب هذي الكلمة للتأكيد',wrong_word:'الكلمة غير مطابقة',only_creator:'فقط منشئ الدورة يقدر يحذفها',
+prev:'السابقة →',next:'← التالية',finish:'✔ خلّصت الصفحة',book_done:'🎉 خلّصت الكتاب كله',saving:'جاري الحفظ...',leave_btn:'🚪 مغادرة الدورة',leave_ask:'تبي تغادر هذي الدورة؟ راح يُحذف تقدّمك فيها.',leaving:'جاري المغادرة...',type_word:'اكتب هذي الكلمة للتأكيد',wrong_word:'الكلمة غير مطابقة',only_creator:'فقط منشئ الدورة يقدر يحذفها',sync_btn:'🔗 مزامنة الأجهزة',sync_title:'مزامنة الأجهزة',sync_show_btn:'📲 اعرض كود ورمز QR',sync_have_btn:'⌨️ عندي كود',
+sync_info:'على جهازك الثاني اكتب الكلمات الست أو امسح رمز QR.',sync_note:'الكود يعمل مرة واحدة فقط وصالح 10 دقائق. لا تشاركه مع أحد.',link_btn:'ربط',bad_code2:'الكود غير صحيح',code_expired:'انتهت صلاحية الكود',syncing:'جاري الربط...',linked_ok:'تم ربط الجهاز ✅',qr_fallback:'رابط الربط:',
 words:['قمر','نخلة','سحابة','وردة','بحر','جبل','نجمة','قلم','كتاب','شمس','ورقة','نهر','صقر','زيتون','ريح','سفينة','قهوة','تمر','ليمون','حديقة']},
 en:{title:'Reading Circle',loading:'Loading...',menu_back:'← Menu',create:'Create a circle',join:'Join a circle',mine:'Your circles',lang_btn:'🌐 Language · اللغة',
 name_lbl:'Circle name',pages_lbl:'Pages per day',me_lbl:'Your name in the circle',pdf_lbl:'PDF file',code_lbl:"Deletion code (save it, you'll need it to delete the circle)",create_btn:'Create',
@@ -98,7 +101,8 @@ card:(n,m)=>`${n} pages a day · You: ${m}`,goal:n=>`Daily goal: ${n} pages`,rea
 th_member:'Member',th_today:'Today',th_status:'Status',th_total:'Total pages',th_missed:'Missed days',done:'Done',notdone:'Not yet',del_btn:'🗑 Delete circle',
 del_title:n=>`🗑 Delete “${n}”`,del_warn:"This permanently deletes the book, all members and their progress. It can't be undone.",del_confirm:"Type the circle's name to confirm",del_code:'Deletion code',cancel:'Cancel',del_final:'Delete permanently',
 name_mismatch:"The name doesn't match",bad_code:'Wrong deletion code',deleting:'Deleting...',loading_book:'Loading the book...',back_circle:'← Circle',today:(a,g)=>`Today ${a}/${g}`,
-prev:'← Previous',next:'Next →',finish:'✔ I finished this page',book_done:'🎉 You finished the whole book',saving:'Saving...',leave_btn:'🚪 Leave circle',leave_ask:'Leave this circle? Your progress in it will be deleted.',leaving:'Leaving...',type_word:'Type this word to confirm',wrong_word:"The word doesn't match",only_creator:'Only the creator can delete this circle',
+prev:'← Previous',next:'Next →',finish:'✔ I finished this page',book_done:'🎉 You finished the whole book',saving:'Saving...',leave_btn:'🚪 Leave circle',leave_ask:'Leave this circle? Your progress in it will be deleted.',leaving:'Leaving...',type_word:'Type this word to confirm',wrong_word:"The word doesn't match",only_creator:'Only the creator can delete this circle',sync_btn:'🔗 Sync devices',sync_title:'Sync devices',sync_show_btn:'📲 Show a code and QR',sync_have_btn:'⌨️ I have a code',
+sync_info:'On your other device, type the 6 words or scan the QR code.',sync_note:"The code works once and expires in 10 minutes. Don't share it with anyone.",link_btn:'Link',bad_code2:'Invalid code',code_expired:'This code has expired',syncing:'Linking...',linked_ok:'Device linked ✅',qr_fallback:'Link:',
 words:['moon','palm','cloud','rose','sea','mountain','star','pen','book','sun','paper','river','falcon','olive','wind','ship','coffee','lemon','tiger','garden']}};
 let L=localStorage.lang||'';
 const tr=k=>(T[L]||T.ar)[k];
@@ -140,7 +144,7 @@ async function delS(d){
       for(const x of await list(d+'/members'))await del(x.path,x.sha);
       for(const x of(await list(d)).filter(x=>x.type=='file'&&x.name!='config.json'))await del(x.path,x.sha);
       const cf=(await list(d)).find(x=>x.name=='config.json');if(cf)await del(cf.path,cf.sha);
-      localStorage.mine=JSON.stringify(mine().filter(x=>x.d!==d));
+      setMine(mine().filter(x=>x.d!==d));
       mo.remove();menu();
     }catch(e){alert(e.message);b.disabled=false;b.textContent=tr('del_final')}
   };
@@ -152,9 +156,74 @@ async function leave(d){
   try{
     const f=(await list(d+'/members')).find(x=>x.name==slug(me.n)+'.json');
     if(f)await del(f.path,f.sha);
-    localStorage.mine=JSON.stringify(mine().filter(x=>x.d!==d));
+    setMine(mine().filter(x=>x.d!==d));
     menu();
   }catch(e){alert(e.message);openD(d)}
+}
+
+/* ---------- device sync (no email: 6 words + QR) ---------- */
+const WORDS="apple arrow bakery beach berry bird boat book bridge brush cabin camel candle canyon carpet castle cedar cherry circle cliff cloud clover coast coffee comet copper coral cotton crane crystal daisy delta desert diamond dolphin dragon dream eagle ember falcon feather fern field flame forest fountain garden ginger glacier goat golden grape harbor hazel heron honey island ivory jasmine jungle kettle kite lagoon lantern lemon lily lotus maple marble meadow melon mint mirror moon moss mountain nectar ocean olive orange orchid otter palm panda pearl pebble pepper pine planet plum pond poppy quartz rabbit rain raven reef ribbon river robin rocket rose saffron sage sand shell silver sketch snow spark spice spring star stone storm sugar summer sunset swan tea thunder tiger timber tulip turtle valley velvet violet walnut water willow wind winter wolf yarrow zebra acorn amber anchor aspen basil bamboo beacon birch blossom breeze cactus canoe cocoa cricket dune echo elm fable fjord flint frost galaxy gecko harvest hawk iris jade juniper kelp koala lark lava lilac lynx mango mesa mist nest oasis onyx opal orbit owl peach pixel prairie pumpkin quill quail radish ridge sable salmon seed sierra sparrow spruce steam sunrise thistle thorn tundra vine wave wheat zephyr almond apricot arctic autumn badger barley bison blizzard bronze butter cashew chestnut cinnamon clementine cobalt cranberry cypress dandelion dusk emerald fennel firefly flamingo garnet hickory indigo lavender magnolia marigold nutmeg orchard paprika peacock pistachio raspberry rosemary sapphire tangerine truffle vanilla violin cider clay dawn dove drift fox frog hill ink lake leaf lime oak".split(' ');
+const b2h=b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
+const h2b=h=>new Uint8Array(h.match(/../g).map(x=>parseInt(x,16)));
+const rw=()=>[...crypto.getRandomValues(new Uint8Array(6))].map(x=>WORDS[x]).join('-');
+const normW=v=>{const a=String(v).toLowerCase().split(/[^a-z]+/).filter(Boolean);return a.length==6&&a.every(x=>WORDS.includes(x))?a.join('-'):''};
+async function derive(w){
+  const km=await crypto.subtle.importKey('raw',new TextEncoder().encode(w),'PBKDF2',false,['deriveBits']);
+  const bits=new Uint8Array(await crypto.subtle.deriveBits({name:'PBKDF2',salt:new TextEncoder().encode('dawra-sync-v1'),iterations:200000,hash:'SHA-256'},km,512));
+  return {id:b2h(bits.slice(0,32)),key:await crypto.subtle.importKey('raw',bits.slice(32),'AES-GCM',false,['encrypt','decrypt'])};
+}
+async function rmFile(p){const g=await fetch(api(p)+q(),{headers:H()});if(g.ok)await del(p,(await g.json()).sha)}
+const acctPath=async()=>'dawras/_acct/'+await hash('acct:'+localStorage.acct)+'.json';
+async function pushMine(){if(!localStorage.acct)return;await put(await acctPath(),enc(JSON.stringify({mine:mine()})),'sync')}
+async function pullMine(merge){
+  if(!localStorage.acct)return;
+  const r=await getRaw(await acctPath());if(!r)return;
+  let rem=[];try{rem=(await r.json()).mine||[]}catch(e){}
+  if(merge){const have=new Set(rem.map(x=>x.d));for(const x of mine())if(!have.has(x.d))rem.push(x)}
+  localStorage.mine=JSON.stringify(rem);
+}
+async function linkWith(w){
+  const {id,key}=await derive(w),p='dawras/_sync/'+id+'.json';
+  const r=await getRaw(p);if(!r)throw new Error(tr('bad_code2'));
+  const j=await r.json();
+  if(Date.now()>j.exp){await rmFile(p).catch(()=>{});throw new Error(tr('code_expired'))}
+  let S;try{S=new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM',iv:h2b(j.iv)},key,h2b(j.ct)))}catch(e){throw new Error(tr('bad_code2'))}
+  localStorage.acct=S;
+  await pullMine(true);await pushMine();
+  await rmFile(p).catch(()=>{});
+}
+let curCode='';
+function leaveSync(){if(curCode){rmFile(curCode).catch(()=>{});curCode=''}menu()}
+function syncS(){app.innerHTML=`${back()}<h2>${tr('sync_title')}</h2><div class="col"><button onclick="syncShow()">${tr('sync_show_btn')}</button><button onclick="syncHave()">${tr('sync_have_btn')}</button></div>`}
+function syncHave(){app.innerHTML=`<button class="ghost" onclick="syncS()">${tr('menu_back')}</button><h2>${tr('sync_title')}</h2><div class="col"><input id="wc" dir="ltr" autocomplete="off" autocapitalize="off" placeholder="word-word-word-word-word-word"><button id="lb" onclick="doLink()">${tr('link_btn')}</button></div>`}
+async function doLink(){
+  const w=normW($('#wc').value);if(!w)return alert(tr('bad_code2'));
+  const b=$('#lb');b.disabled=true;b.textContent=tr('syncing');
+  try{await linkWith(w);alert(tr('linked_ok'));menu()}catch(e){alert(e.message);b.disabled=false;b.textContent=tr('link_btn')}
+}
+async function syncShow(){
+  busy(tr('syncing'));
+  try{
+    if(!localStorage.acct)localStorage.acct=b2h(crypto.getRandomValues(new Uint8Array(16)));
+    await pushMine();
+    const w=rw(),{id,key}=await derive(w),iv=crypto.getRandomValues(new Uint8Array(12));
+    const ct=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,new TextEncoder().encode(localStorage.acct));
+    const p='dawras/_sync/'+id+'.json';
+    await put(p,enc(JSON.stringify({iv:b2h(iv),ct:b2h(ct),exp:Date.now()+600000})),'sync code');
+    curCode=p;
+    const link=location.origin+location.pathname+'#sync='+w;
+    app.innerHTML=`<button class="ghost" onclick="leaveSync()">${tr('menu_back')}</button><h2>${tr('sync_title')}</h2><p class="mut">${tr('sync_info')}</p>
+<div id="synccode" dir="ltr" style="text-align:center;font-size:22px;font-weight:700;color:#00e0c0;margin:12px 0;line-height:1.6">${w.split('-').join(' · ')}</div>
+<div style="text-align:center"><div id="qr" style="background:#fff;padding:12px;border-radius:12px;display:inline-block"></div></div>
+<p class="mut">${tr('sync_note')}</p>`;
+    if(window.QRCode)new QRCode($('#qr'),{text:link,width:200,height:200,correctLevel:QRCode.CorrectLevel.M});
+    else $('#qr').outerHTML=`<p class="mut" dir="ltr">${tr('qr_fallback')} ${link}</p>`;
+    const t0=Date.now(),tm=setInterval(async()=>{
+      if(!$('#synccode')){clearInterval(tm);return}
+      if(Date.now()-t0>600000){clearInterval(tm);rmFile(p).catch(()=>{});return}
+      try{if(!await getRaw(p)){clearInterval(tm);curCode='';app.innerHTML=`${back()}<h2>${tr('linked_ok')}</h2>`}}catch(e){}
+    },5000);
+  }catch(e){alert(e.message);syncS()}
 }
 
 /* ---------- screens ---------- */
@@ -162,6 +231,7 @@ function menu(){app.innerHTML=`<h1><span class="fl">📖</span> ${tr('title')}</
 <button onclick="createS()">${tr('create')}</button>
 <button onclick="joinS()">${tr('join')}</button>
 <button onclick="mineS()">${tr('mine')}</button>
+<button class="ghost" onclick="syncS()">${tr('sync_btn')}</button>
 <button class="ghost" onclick="langS()">${tr('lang_btn')}</button></div>`}
 
 function createS(){app.innerHTML=`${back()}<h2>${tr('create')}</h2><div class="col">
@@ -190,7 +260,7 @@ async function doCreate(){
 async function joinS(){
   busy();
   try{
-    const ds=(await list('dawras')).filter(x=>x.type=='dir');
+    const ds=(await list('dawras')).filter(x=>x.type=='dir'&&!x.name.startsWith('_'));
     const cs=await Promise.all(ds.map(async x=>{const r=await getRaw(x.path+'/config.json');return r?{d:x.path,c:await r.json()}:null}));
     const ok=cs.filter(Boolean);
     app.innerHTML=`${back()}<h2>${tr('join')}</h2>`+(ok.length?`<div class="col">
@@ -213,6 +283,7 @@ async function doJoin(){
 }
 
 async function mineS(){
+  if(localStorage.acct){try{await pullMine(false)}catch(e){}}
   const l=mine();
   if(!l.length){app.innerHTML=`${back()}<h2>${tr('mine')}</h2><p class="mut">${tr('not_joined')}</p>`;return}
   busy();
@@ -274,7 +345,14 @@ async function fin(){
   try{await saveMember(d,m)}catch(e){alert(e.message);m.days[t]--;m.last=view-1;return ui()}
   if(view<pdf.numPages)view++;ui();scrollTo(0,0);
 }
-if(L){applyLang();menu()}else langS();
+(async()=>{
+  const hs=/#sync=([a-z-]+)/.exec(location.hash);
+  if(L)applyLang();
+  if(hs){history.replaceState(null,'',location.pathname+location.search);const w=normW(hs[1]);
+    if(w){busy(tr('syncing'));try{await linkWith(w);alert(tr('linked_ok'))}catch(e){alert(e.message)}}}
+  else if(localStorage.acct){try{await pullMine(false)}catch(e){}}
+  L?menu():langS();
+})();
 </script>
   <!-- Cloudflare Web Analytics --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "625a605e35d4490aa269355fba10781f"}'></script><!-- End Cloudflare Web Analytics -->
 </body>
